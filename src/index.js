@@ -1,15 +1,15 @@
 import dotenv from "dotenv"
-import CONNECT_DB from "./database/dataBase.database.js"
+import {app} from './app.js'
+import connectDB from "./database/dataBase.database.js";
 
 dotenv.config({
     path:'/.env'
 })
 
-CONNECT_DB()
+connectDB()
 .then((result) => {
- app.listen(process.env.PORT|| 8000,()  => {
-    console.log('Server is running in:,${process.env.PORT}');
-    
+ app.listen(process.env.PORT|| 3000,()  => {
+    console.log(`Server is running at port:${process.env.PORT}`);
  })
     
 }).catch((err) => {
