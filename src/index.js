@@ -1,5 +1,5 @@
 import dotenv from "dotenv"
-import CONNECT_DB from "./database/database.models.js"
+import CONNECT_DB from "./database/dataBase.database.js"
 
 dotenv.config({
     path:'/.env'

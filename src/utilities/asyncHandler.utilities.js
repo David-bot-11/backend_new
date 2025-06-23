@@ -1,6 +1,6 @@
-const asyncHandler=(funct)=>{async (err,res,req,next) => {
+const asyncHandler=(requestHandler)=>{async (err,res,req,next) => {
 try {
-    await funct(res,req,next)
+    await requestHandler(res,req,next)
     
 } catch (error) {
     
