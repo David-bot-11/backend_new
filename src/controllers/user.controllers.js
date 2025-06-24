@@ -3,6 +3,7 @@ import {asyncHandler} from "../utilities/asyncHandler.utilities.js";
 import {uploadOnCloudinary} from "../utilities/cloudinary.utilities.js";
 import { apiResponse } from "../utilities/apiResponse.utilities.js";
 import {User} from "../models/user.model.js"
+import express from "express";
 
 const generateAccessAndRefreshToken = async(userId)=> {
     try {
@@ -22,16 +23,16 @@ const generateAccessAndRefreshToken = async(userId)=> {
 const registerUser = asyncHandler( async (req, res) => {
     
 
-    const {fullName, email, username, password } = req.body
+    const {fullName, email, userName, password } = req.body
    
     if (
-        [fullName, email, username, password].some((field) => field?.trim() === "")
+        [fullName, email, userName, password].some((field) => field?.trim() === "")
     ) {
         throw new ApiError(400, "All fields are required")
     }
 
     const existedUser = await User.findOne({
-        $or: [{ username }, { email }]
+        $or: [{ userName }, { email }]
     })
 
     if (existedUser) {
@@ -66,7 +67,7 @@ const registerUser = asyncHandler( async (req, res) => {
         coverImage: coverImage?.url || "",
         email, 
         password,
-        username: username.toLowerCase()
+        userName: userName.toLowerCase()
     })
 
     const createdUser = await User.findById(user._id).select(
@@ -78,52 +79,58 @@ const registerUser = asyncHandler( async (req, res) => {
     }
 
     return res.status(201).json(
-        new ApiResponse(200, createdUser, "User registered Successfully")
+        new apiResponse(200, createdUser, "User registered Successfully")
     )
 
 } )
 
 
-const loginUser = asyncHandler(async (req,res) => {
-    const {email,userName,password}=req.body
-    if (!userName||!email) {
-        throw new ApiError(400,"username or email is required")
-        
+const loginUser = asyncHandler(async (req, res) =>{
+    
+
+    const {email, userName, password} = req.body
+    console.log(email);
+
+    if (!userName && !email) {
+        throw new ApiError(400, "username or email is required")
     }
+    
+  
+
     const user = await User.findOne({
-        $or:[{userName},{email}]
+        $or: [{userName}, {email}]
     })
+
     if (!user) {
-        throw new ApiError(404,"username or email not registered")
-        
+        throw new ApiError(404, "User does not exist")
     }
-    const isPasswordValid=await user.isPasswordCorrect(password)
-     if (!isPasswordValid) {
-        throw new ApiError(401,"Invalid user credentials")
-        
+
+   const isPasswordValid = await user.isPasswordCorrect(password)
+
+   if (!isPasswordValid) {
+    throw new ApiError(401, "Invalid user credentials")
     }
-    const{accessToken,refreshToken} =   await 
-    generateAccessAndRefreshToken(user._id)
 
-   const loggedinUser= await User.findById(user._id).select("-password -refreshToken")
+   const {accessToken, refreshToken} = await generateAccessAndRefereshTokens(user._id)
 
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
 
-   const options ={
+    const options = {
+        httpOnly: true,
+        secure: true
+    }
 
-    httpOnly:true,
-    secure:true
-   }
-    return res.status(200)
-    .cookie("accessToken",accessToken,options)
-    .cookie("refreshToken",refreshToken,options)
+    return res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
     .json(
-        new ApiResponse(
-            200,{
-                user:loggedinUser,
-                accessToken,refreshToken
-            
+        new apiResponse(
+            200, 
+            {
+                user: loggedInUser, accessToken, refreshToken
             },
-            "User logged in successfully"
+            "User logged In Successfully"
         )
     )
 
@@ -150,7 +157,7 @@ const logoutUser=asyncHandler(async (req,res) => {
     .status(200)
     .clearCookie("accessToken",options)
     .clearCookie("refreshToken",options)
-    .json(new ApiResponse(200,{},"User logged out"))
+    .json(new apiResponse(200,{},"User logged out"))
 })
 
 export {registerUser,loginUser,logoutUser}
