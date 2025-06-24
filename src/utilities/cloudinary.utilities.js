@@ -1,4 +1,4 @@
-import { v2 } from "cloudinary";
+import { v2 as cloudinary} from "cloudinary";
 import { log } from "console";
 import fs from "fs"
 
@@ -26,6 +26,3 @@ const uploadOnCloudinary = async (localFilePath)=> {
 } 
 export {uploadOnCloudinary}
 
-cloudinary.v2.uploader.upload("https://upload.wikimedia.org/wikipedia/commons/a/ae/Olympic_flag.jpg",
-    {public_id:"olympic flag"},
-    function(error,result){console.log(result);});
